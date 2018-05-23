@@ -1,8 +1,6 @@
 package com.kang.servlet;
 
-import com.kang.annotation.Controller;
-import com.kang.annotation.RequestMapping;
-import com.kang.annotation.RequestParam;
+import com.kang.annotation.*;
 import com.kang.domain.HanderMethod;
 import com.kang.domain.HanderMethodParameter;
 import com.kang.resolver.MethodParamResolver;
@@ -16,6 +14,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -38,10 +37,17 @@ public class DispatcherServlet extends HttpServlet {
      */
     private HashMap<String,HanderMethod> pathToMethod = new HashMap<String,HanderMethod>();
 
+
+    /**
+     * 保存类的Type和Instance之间的映射
+     */
+    private HashMap<Object,Object> typeToObject = new HashMap<Object,Object>();
+
     /**
      * RequestMapping的path和Method参数映射关系
      */
     private HashMap<String,List<HanderMethodParameter>> pathToMethodParams = new HashMap<String,List<HanderMethodParameter>>();
+
 
     /**
      * 默认包路径
@@ -58,6 +64,44 @@ public class DispatcherServlet extends HttpServlet {
         new FileScanner().scanPackage(defaultPackagePath,fileNames);
         //实例化有效的类
         filterAndInstance();
+        //依赖注入AutoWired部分
+        ioc();
+    }
+
+    /**
+     * 类中的Autowired 元素进行注入
+     */
+    private void ioc() {
+
+        Collection<Object> collection = typeToObject.values();
+        if (collection.isEmpty()) {
+            return;
+        }
+        //遍历集合
+        for (Object object: collection) {
+            Class cls = object.getClass();
+
+            //解析field
+            Field[] fields = cls.getDeclaredFields();
+            if (fields != null && fields.length > 0) {
+                for (Field field : fields) {
+
+                    if (field.isAnnotationPresent(AutoWired.class)) {
+                        field.setAccessible(true);
+                        //判断是否包含要注入的类型
+                        if (typeToObject.containsKey(field.getGenericType())) {
+                            try {
+                                field.set(object,typeToObject.get(field.getGenericType()));
+                            } catch (IllegalAccessException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
     }
 
     /**
@@ -72,10 +116,16 @@ public class DispatcherServlet extends HttpServlet {
                     if (fileName.contains(".class")) {
                         fileName = FilePathUtils.trimEndingClass(fileName);
                         Class<?> cls = Class.forName(fileName);
+                        //
+                        if (cls.isAnnotationPresent(Controller.class) || cls.isAnnotationPresent(Component.class)) {
+                            //组件类型和实例之间的映射
+                            typeToObject.put(cls,cls.newInstance());
+                        }
+
                         if (cls.isAnnotationPresent(Controller.class)) {
                             /*Controller conAnn = cls.getAnnotation(Controller.class);
                             conAnn.value()*/
-                            Object controller= cls.newInstance();
+                            Object controller= typeToObject.get(cls);
                             //解析方法
                             Method[] methods = cls.getDeclaredMethods();
                             if (methods != null && methods.length > 0) {

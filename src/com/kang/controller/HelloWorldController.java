@@ -1,8 +1,7 @@
 package com.kang.controller;
 
-import com.kang.annotation.Controller;
-import com.kang.annotation.RequestMapping;
-import com.kang.annotation.RequestParam;
+import com.kang.annotation.*;
+import com.kang.service.HelloWorldService;
 
 /**
  * @Author：zeqi
@@ -12,8 +11,13 @@ import com.kang.annotation.RequestParam;
 @Controller
 public class HelloWorldController {
 
+
+    @AutoWired
+    private HelloWorldService helloWorldService;
+
     @RequestMapping("/hello")
     public String  helloWorld(@RequestParam(name="name") String name,@RequestParam(name="value",defaultValue = "世界") String value) {
-        return name + " " + value;
+
+        return helloWorldService.helloWorld(name,value);
     }
 }

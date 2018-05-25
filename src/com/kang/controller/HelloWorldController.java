@@ -16,7 +16,13 @@ public class HelloWorldController {
     private HelloWorldService helloWorldService;
 
     @RequestMapping("/hello")
-    public String  helloWorld(@RequestParam(name="name") String name,@RequestParam(name="value",defaultValue = "世界") String value) {
+    public String  helloWorld(@RequestHeader(name="x-uid") int uid,@RequestParam(name="name") String name,@RequestParam(name="value",defaultValue = "世界") String value) {
+
+        return helloWorldService.helloWorld(name,value) + " uid:" + uid;
+    }
+
+    @RequestMapping("/hello2")
+    public String  helloWorld2(@RequestParam(name="name") String name,@RequestParam(name="value",defaultValue = "世界") String value) {
 
         return helloWorldService.helloWorld(name,value);
     }

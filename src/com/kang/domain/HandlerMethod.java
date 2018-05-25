@@ -7,13 +7,13 @@ import java.lang.reflect.Method;
  * @Date: Created in 14:12 23/5/18.
  * @Description:
  */
-public class HanderMethod {
+public class HandlerMethod {
 
     private Method method;
 
     private Object bean;
 
-    public HanderMethod(Method method, Object bean) {
+    public HandlerMethod(Method method, Object bean) {
         this.method = method;
         this.bean = bean;
     }

@@ -1,6 +1,6 @@
 package com.kang.resolver;
 
-import com.kang.domain.HanderMethodParameter;
+import com.kang.domain.HandlerMethodParameter;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -12,6 +12,6 @@ import java.util.List;
  */
 public interface MethodParamResolver {
 
-     Object[] doResolverParams( List<HanderMethodParameter> methodParameters,HttpServletRequest req);
+     Object doResolverParam(HandlerMethodParameter methodParameter, HttpServletRequest req);
 
 }

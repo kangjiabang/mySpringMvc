@@ -1,7 +1,9 @@
 package com.kang.convert;
 
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
 
 /**
  * @Author：zeqi
@@ -10,16 +12,23 @@ import java.lang.reflect.Type;
  */
 public class DataBinder {
 
-    public Object convertIfNecessary(Object arg, Parameter parameter) {
-        Class<?> sourceType = arg.getClass();
-        Class<?> dstType = parameter.getType();
-        if (sourceType == dstType) {
-            return arg;
-        }
-        if (sourceType == String.class && dstType == int.class) {
-            return Integer.decode((String)arg).intValue();
-        }
-        //arg.
-        return null;
+    private ConvertService convertService;
+
+    public DataBinder() {
+        this.convertService = new ConvertService();
     }
+
+    public Object convertIfNecessary(Object arg, Parameter parameter) {
+
+        if (arg.getClass() == String.class && Collection.class.isAssignableFrom(parameter.getType())) {
+            Type type = parameter.getParameterizedType();
+            ParameterizedType pt = (ParameterizedType) type;
+            Class elementType = (Class) pt.getActualTypeArguments()[0];
+            return new StringToCollectionConverter(convertService).convert((String)arg,arg.getClass(),parameter.getType(),elementType);
+        }
+        return convertService.convert(arg, parameter);
+
+    }
+
+
 }
